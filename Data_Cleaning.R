@@ -4,7 +4,7 @@ library(plotly)
 library(stringi)
 
 ## Reading in IGN data and performing basic cleanup, including translating
-## non-ASCii titles. Will perfrom 
+## non-ASCii titles.
 
 vg_df <- read.csv("data/ign.csv")
 vg_df$title <- as.character(vg_df$title)
@@ -30,14 +30,21 @@ vg_df$ign_url <- vg_df$url
 
 user_selection <- function(...) {
                   input_list <- list(...)
-                  x <- vg_df %>% 
-                    filter(grepl(paste(input_list, collapse = '|'), title))
-                  return(x)
+                  return(vg_df %>% 
+                    filter(grepl(paste(input_list, collapse = '|'), title)))
 }
 
 ## Testing
 
-user_selection_df <- user_selection("mega man", "mario")
+user_selection_df <- user_selection("mega man", "mario", "pokemon")
+
+## List with series info to create a dataframe
+
+series_sorter <- function (series_text) {
+  vg_df %>% 
+    filter(grepl(paste(series_text), title)) %>% 
+    mutate(series = series_text)
+}
 
 ## Creating pre-sets for popular game series (will filter down to a few)
 
@@ -61,14 +68,10 @@ dkc_df = series_sorter("donkey kong country")
 tomb_df = series_sorter("tomb raider")
 cod_df = series_sorter("call of duty")
 resident_df = series_sorter("resident evil")
+pokemon_df = series_sorter("pokemon")
+kirby_df = series_sorter("kirby")
 
-## List with series info to create a dataframe
 
-series_sorter <- function (series_text) {
-  vg_df %>% 
-    filter(grepl(paste(series_text, collapse('|')), title)) %>% 
-    mutate(series = series_text)
-}
 
 # series_dict <- list(mario_df = "super mario", zelda_df = "zelda", smash_df = "super smash", 
 #                     mkart_df = "kart", gta_df = "grand theft auto", scrolls_df = "elder scrolls", 
@@ -95,8 +98,10 @@ sonic_df <- sonic_df[-c(8, 18, 25, 52), ]
 
 series_df <- rbind(mario_df, zelda_df, smash_df, mkart_df, gta_df, scrolls_df, 
                    fallout_df, sonic_df, mk_df, halo_df, metal_df, metroid_df, ac_df, 
-                   crash_df, sf_df, megaman_df, dkc_df, tomb_df, cod_df, resident_df)
+                   crash_df, sf_df, megaman_df, dkc_df, tomb_df, cod_df, resident_df,
+                   pokemon_df, kirby_df)
 
+write.csv(x = series_df, file = "series_df.csv")
 ## Initial data visualization for exploratory analysis
 
 series_plot_df <- plot_ly(merged_df, x = ~release_year, y = ~score, color = ~series,
