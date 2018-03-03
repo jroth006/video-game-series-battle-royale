@@ -93,14 +93,43 @@ levels(merged_sales_df$Platform) <- sub("GG", "Game Gear", levels(merged_sales_d
 
 ## write.csv(x = merged_sales_df, file = "merged_sales_df.csv")
 saveRDS(merged_sales_df, file = "merged_sales_df.rds")
+merged_sales_df <- readRDS("merged_sales_df.rds")
 
 ## Finding the difference between user scores and critic scores for second tab
 
-score_diff_df <- merged_sales_df %>% 
-  drop_na("Critic_Score") %>%
-  drop_na("User_Score") %>%
-  filter(User_Count > 5 & Critic_Count > 5) %>% 
-  mutate(score_diff = Critic_Score - User_Score)
+score_diff_function <- function(diff_input){
+  merged_sales_df %>% 
+    filter(series == diff_input) %>% 
+    select("Year_of_Release","User_Score", "User_Count", 
+           "Critic_Score", "Critic_Count", "Global_Sales", "series") %>% 
+    group_by(Year_of_Release, series) %>% 
+    summarise("Avg. Critic Score" = mean(Critic_Score[Critic_Score>1],na.rm=TRUE),
+              "Avg. User Score" = mean(User_Score[User_Score > 1], na.rm = TRUE),
+              "Score Differential" = mean(User_Score[User_Score > 1],na.rm=TRUE) - 
+                mean(Critic_Score[Critic_Score>1], na.rm = TRUE),
+              "Total Global Sales" = sum(Global_Sales)) %>%
+    drop_na(`Score Differential`) %>%
+    drop_na(`Total Global Sales`) %>% 
+    melt(id = c("Year_of_Release", "series")) %>%
+    filter(Year_of_Release != "N/A")
+}
+
+mario_diff_df <- score_diff_function("super mario")
+zelda_diff_df <- score_diff_function("zelda")
+sonic_diff_df <- score_diff_function("sonic")
+mk_diff_df <- score_diff_function("mortal kombat")
+halo_diff_df <- score_diff_function("halo")
+metal_diff_df <- score_diff_function("metal gear")
+sf_diff_df <- score_diff_function("street fighter")
+megaman_diff_df <- score_diff_function("mega man")
+pokemon_diff_df <- score_diff_function("pokemon")
+kirby_diff_df <- score_diff_function("kirby")
+
+score_diff_df <- rbind(mario_diff_df, zelda_diff_df, sonic_diff_df, mk_diff_df,
+                       halo_diff_df, metal_diff_df, sf_diff_df, megaman_diff_df,
+                       pokemon_diff_df, kirby_diff_df)
+
+saveRDS(score_diff_df, "shiny_diff_df.RDS")
 
 #---------------------------------------------------------------------------#
 
@@ -116,9 +145,9 @@ shiny_function <- function(text_input){
   summarise("Series Name" = unique(series),
             "# of Platforms" = length(unique(Platform)),
             "# of Titles" = length(unique(Name)),
+            "Avg. Global Units Sold (in millions)" = mean(Global_Sales),
             "Avg. Critic Score" = mean(Critic_Score[Critic_Score>1],na.rm=TRUE),
-            "Avg. User Score" = mean(User_Score[User_Score > 1], na.rm = TRUE),
-            "Total Global Units Sold (in millions)" = sum(Global_Sales)) %>% 
+            "Avg. User Score" = mean(User_Score[User_Score > 1], na.rm = TRUE)) %>% 
   melt(id = "Series Name") %>% 
   mutate(value = round(value, 2))
 }
@@ -142,11 +171,42 @@ shiny_sales_df <- rbind(mario_merged_df, zelda_merged_df, sonic_merged_df, mk_me
 
 saveRDS(shiny_sales_df, "shiny_sales_df.RDS")
 
-res_chart <- hchart(merged_sales_format, "bar", hcaes(x = merged_sales_format$variable, 
+right_res_chart <- hchart(merged_sales_format, "bar", hcaes(x = merged_sales_format$variable, 
+                           y = merged_sales_format$value,
+                           color = merged_sales_format$variable)) %>% 
+    ## Chart settings
+    hc_chart(
+      backgroundColor = "#272B30",
+      style = list(
+        fontFamily = "Helvetica")) %>% 
+    ## Plot settings
+    hc_plotOptions(
+      bar = list(
+        dataLabels = list(
+          align = "right",
+          allowOverlap = TRUE,
+          enabled = TRUE,
+          style = list(
+            fontSize = "12px")))) %>% 
+    ## Y Axis settings
+    hc_yAxis(visible = FALSE) %>% 
+    ## X Axis settings
+    hc_xAxis(title = list(
+      enabled = FALSE),
+      labels = list(
+        style = list(
+          fontSize = "14px"))) %>% 
+    ## Tooltip settings
+    hc_tooltip(enabled = FALSE) %>%
+    ## Theme to adopt some basic settings
+    hc_add_theme(hc_theme_darkunica())
+
+left_res_chart <- hchart(merged_sales_format, "bar", hcaes(x = merged_sales_format$variable, 
                                                       y = merged_sales_format$value,
                                                       color = merged_sales_format$variable)) %>% 
                     ## Chart settings
                     hc_chart(
+                      height = '125%',
                       style = list(
                         fontFamily = "Helvetica")) %>% 
                     ## Plot settings
@@ -179,11 +239,33 @@ res_chart <- hchart(merged_sales_format, "bar", hcaes(x = merged_sales_format$va
                     ## Theme to adopt some basic settings
                     hc_add_theme(hc_theme_darkunica())
 
-res_chart
+left_res_chart
+#---------------------------------------------------------------------------#
+score_diff_df <- score_diff_function("street fighter")
+score_diff_df$Year_of_Release <- as.integer(paste(score_diff_df$Year_of_Release))
+score_diff_chart <- score_diff_df %>% 
+  filter(!is.na(Year_of_Release)) %>% 
+  filter(!is.na(value)) %>% 
+  hchart(score_diff_df, "scatter", hcaes(x = Year_of_Release,
+                             y = value,
+                             color = variable)) %>% 
+  ## Chart settings
+  hc_chart(
+    style = list(
+      fontFamily = "Helvetica")) %>% 
+  ## Y-Axis settings
+  hc_yAxis(title = list(text = "Avg. Scores"),
+           max = 100,
+           showFirstLabel = FALSE,
+           plotBands = list(
+             list(from = -50, to = 0, color = "#8e0000",
+                  label = list(text = "Critic Score is higher than User Score!")))) %>% 
+  ## X-Axis settings
+  hc_xAxis(title = list(text = "Release Year")) %>% 
+  ## Theme to adopt some basic settings
+  hc_add_theme(hc_theme_darkunica())
 
-
-
-
+score_diff_chart
 
 #---------------------------------------------------------------------------#
 
@@ -191,10 +273,7 @@ res_chart
 
 user_selection <- function(...) {
   input_list <- list(...)
-  return(vg_df %>% 
+  return(score_diff_function %>% 
            filter(grepl(paste(input_list, collapse = '|'), title)))
 }
 
-## Testing
-
-user_selection_df <- user_selection("mega man", "mario", "pokemon")
