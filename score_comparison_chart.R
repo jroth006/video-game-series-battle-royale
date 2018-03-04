@@ -48,27 +48,32 @@ score_diff_chart <- highchart() %>%
   hc_add_series(name = "Score Differential", score_differential$value) %>%
   ## Chart settings
   hc_chart(
+    backgroundColor = "#272B30",
     style = list(
-      backgroundColor = "#272B30",
       fontFamily = "Helvetica")) %>% 
   ## Theme to adopt some basic settings
   hc_add_theme(hc_theme_darkunica()) %>% 
   ## X-Axis settings
   hc_xAxis(categories = critic_score$Year_of_Release,
-          title = list(text = "Release Year")) %>% 
+           title = list(text = "")) %>% 
   ## Y-Axis settings
   hc_yAxis(title = list(text = "Avg. Scores"),
            max = 100,
-           showFirstLabel = FALSE,
-           plotBands = list(
-             list(from = -50, to = 0, color = "#6d6934",
-                  label = list(align = "center",
-                               text = "Points in this range represent Critic Score is higher than User Score!",
-                               style = list(color = "#ffffff",
-                                            fontSize = "13px"))))) %>% 
+           showFirstLabel = FALSE) %>% 
+  # plotBands = list(
+  #   list(from = -50, to = 0, color = "#272B30",
+  #        label = list(align = "center",
+  #                     verticalAlign = "middle",
+  #                     text = "",
+  #                     style = list(color = "#ffffff",
+  #                                  fontSize = "13px"))))) %>% 
   ## Tooltip settings
-  hc_tooltip(valueDecimals = 2,
-             shared = TRUE)
+  hc_tooltip(crosshairs = TRUE,
+             valueDecimals = 2,
+             shared = TRUE) %>% 
+  hc_credits(enabled = TRUE, 
+             text = "Data courtesy of https://www.kaggle.com/kendallgillies/video-game-sales-and-ratings",
+             style = list(fontSize = "10px"))
 
 
 score_diff_chart

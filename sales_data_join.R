@@ -28,7 +28,7 @@ sales_sorter <- function (sales_text) {
 }
 
 ## Creating pre-sets for popular game series (will filter down to a few)
-## Will refactor when I have more time
+## Will try to refactor when I have more time
 
 mario_sales_df = sales_sorter("super mario")
 zelda_sales_df = sales_sorter("zelda")
@@ -55,9 +55,8 @@ kirby_sales_df = sales_sorter("kirby")
 
 ## Merging series data
 
-merged_sales_df <- rbind(mario_sales_df, zelda_sales_df, smash_sales_df, mkart_sales_df, gta_sales_df, scrolls_sales_df, 
-                         fallout_sales_df, sonic_sales_df, mk_sales_df, halo_sales_df, metal_sales_df, metroid_sales_df, ac_sales_df, 
-                         crash_sales_df, sf_sales_df, megaman_sales_df, dkc_sales_df, tomb_sales_df, cod_sales_df, resident_sales_df,
+merged_sales_df <- rbind(mario_sales_df, zelda_sales_df, sonic_sales_df, mk_sales_df, 
+                         halo_sales_df, metal_sales_df, sf_sales_df, megaman_sales_df, 
                          pokemon_sales_df, kirby_sales_df)
 
 ## Renaming platforms for clarity
@@ -89,12 +88,26 @@ levels(merged_sales_df$Platform) <- sub("SCD", "Sega CD", levels(merged_sales_df
 levels(merged_sales_df$Platform) <- sub("NG", "Neo Geo", levels(merged_sales_df$Platform))
 levels(merged_sales_df$Platform) <- sub("GG", "Game Gear", levels(merged_sales_df$Platform))
 
-## Output file to csv
+#---------------------------------------------------------------------------#
+## Creating merged_sales_df for the Data Table
 
-## write.csv(x = merged_sales_df, file = "merged_sales_df.csv")
+merged_sales_df <- merged_sales_df %>% 
+  select(-c(NA_Sales, EU_Sales, JP_Sales, Other_Sales,
+            Critic_Count, User_Count, Rating)) %>%
+  mutate("Name" = gsub("(?<=\\b)([a-z])", "\\U\\1", Name, perl = TRUE)) %>%
+  mutate("series" = gsub("(?<=\\b)([a-z])", "\\U\\1", series, perl = TRUE))
+
+
+colnames(merged_sales_df) <- c("Title", "Platform", "Release Year", "Genre", "Publisher", "Total Global Sales (Millions)",
+           "Critic Score", "User Score", "Developer", "Series")
+
+merged_sales_df$`Release Year` <- as.integer(paste(merged_sales_df$`Release Year`))
+merged_sales_df <- merged_sales_df %>% 
+  drop_na(`Release Year`)
+
 saveRDS(merged_sales_df, file = "merged_sales_df.rds")
-merged_sales_df <- readRDS("merged_sales_df.rds")
 
+#---------------------------------------------------------------------------#
 ## Finding the difference between user scores and critic scores for second tab
 
 score_diff_function <- function(diff_input){
@@ -129,11 +142,13 @@ score_diff_df <- rbind(mario_diff_df, zelda_diff_df, sonic_diff_df, mk_diff_df,
                        halo_diff_df, metal_diff_df, sf_diff_df, megaman_diff_df,
                        pokemon_diff_df, kirby_diff_df)
 
+score_diff_df <- score_diff_df %>% 
+  mutate("series" = gsub("(?<=\\b)([a-z])", "\\U\\1", series, perl = TRUE))
+
 saveRDS(score_diff_df, "shiny_diff_df.RDS")
 
 #---------------------------------------------------------------------------#
-
-## Data Visualizations for series comparison
+## Creating dataframe for series comparison on the first tab
 
 text_input <- input$radio2
 
@@ -149,10 +164,8 @@ shiny_function <- function(text_input){
             "Avg. Critic Score" = mean(Critic_Score[Critic_Score>1],na.rm=TRUE),
             "Avg. User Score" = mean(User_Score[User_Score > 1], na.rm = TRUE)) %>% 
   melt(id = "Series Name") %>% 
-  mutate(value = round(value, 2))
+  mutate(value = round(value, 2)) 
 }
-
-merged_sales_format <- shiny_function("super mario")
 
 mario_merged_df = shiny_function("super mario")
 zelda_merged_df = shiny_function("zelda")
@@ -169,7 +182,13 @@ shiny_sales_df <- rbind(mario_merged_df, zelda_merged_df, sonic_merged_df, mk_me
                         halo_merged_df, metal_merged_df, sf_merged_df, megaman_merged_df,
                         pokemon_merged_df, kirby_merged_df)
 
+shiny_sales_df <- shiny_sales_df %>% 
+  mutate("Series Name" = gsub("(?<=\\b)([a-z])", "\\U\\1", `Series Name`, perl = TRUE))
+
 saveRDS(shiny_sales_df, "shiny_sales_df.RDS")
+
+#---------------------------------------------------------------------------#
+## Data Visualizations for series comparison - Right side (include variable names)
 
 right_res_chart <- hchart(merged_sales_format, "bar", hcaes(x = merged_sales_format$variable, 
                            y = merged_sales_format$value,
@@ -200,6 +219,9 @@ right_res_chart <- hchart(merged_sales_format, "bar", hcaes(x = merged_sales_for
     hc_tooltip(enabled = FALSE) %>%
     ## Theme to adopt some basic settings
     hc_add_theme(hc_theme_darkunica())
+
+#---------------------------------------------------------------------------#
+## Data Visualizations for series comparison - Left side (no variable names)
 
 left_res_chart <- hchart(merged_sales_format, "bar", hcaes(x = merged_sales_format$variable, 
                                                       y = merged_sales_format$value,
@@ -240,40 +262,87 @@ left_res_chart <- hchart(merged_sales_format, "bar", hcaes(x = merged_sales_form
                     hc_add_theme(hc_theme_darkunica())
 
 left_res_chart
+
 #---------------------------------------------------------------------------#
-score_diff_df <- score_diff_function("street fighter")
-score_diff_df$Year_of_Release <- as.integer(paste(score_diff_df$Year_of_Release))
-score_diff_chart <- score_diff_df %>% 
-  filter(!is.na(Year_of_Release)) %>% 
-  filter(!is.na(value)) %>% 
-  hchart(score_diff_df, "scatter", hcaes(x = Year_of_Release,
-                             y = value,
-                             color = variable)) %>% 
+## Function to allow for averaging multiple series
+
+user_selection <- function(input) {
+  return(score_diff_df %>% 
+           filter(grepl(paste(input, collapse = '|'), series)))
+}
+
+## Test List
+example_list <- list("pokemon", "metal gear")
+
+## Calling function to create df
+score_diff_df <- user_selection(example_list) 
+
+#---------------------------------------------------------------------------#
+## Creating individual df's for each variable to create individual series in plot
+critic_score <- score_diff_df %>% 
+  filter(variable == "Avg. Critic Score") %>%
+  select(-c(series)) %>% 
+  group_by(Year_of_Release) %>% 
+  summarise("value" = mean(value)) %>% 
+  filter(Year_of_Release != "N/A")
+
+user_score <- score_diff_df %>% 
+  filter(variable == "Avg. User Score") %>%
+  select(-c(series)) %>% 
+  group_by(Year_of_Release) %>% 
+  summarise("value" = mean(value)) %>% 
+  filter(Year_of_Release != "N/A")
+
+score_differential <- score_diff_df %>% 
+  filter(variable == "Score Differential") %>%
+  select(-c(series)) %>% 
+  group_by(Year_of_Release) %>% 
+  summarise("value" = mean(value)) %>% 
+  filter(Year_of_Release != "N/A")
+
+total_sales <- score_diff_df %>% 
+  filter(variable == "Total Global Sales") %>%
+  select(-c(series)) %>% 
+  group_by(Year_of_Release) %>% 
+  summarise("value" = mean(value)) %>% 
+  filter(Year_of_Release != "N/A")
+
+#---------------------------------------------------------------------------#
+## Creating highchart for score comparison
+
+score_diff_chart <- highchart() %>% 
+  hc_add_series(name = "Critic Score", critic_score$value) %>% 
+  hc_add_series(name = "User Score", user_score$value) %>%
+  hc_add_series(type = "column", name = "Total Global Sales (Millions)", total_sales$value) %>%
+  hc_add_series(name = "Score Differential", score_differential$value) %>%
   ## Chart settings
   hc_chart(
+    backgroundColor = "#272B30",
     style = list(
       fontFamily = "Helvetica")) %>% 
+  ## Theme to adopt some basic settings
+  hc_add_theme(hc_theme_darkunica()) %>% 
+  ## X-Axis settings
+  hc_xAxis(categories = critic_score$Year_of_Release,
+           title = list(text = "")) %>% 
   ## Y-Axis settings
   hc_yAxis(title = list(text = "Avg. Scores"),
            max = 100,
-           showFirstLabel = FALSE,
-           plotBands = list(
-             list(from = -50, to = 0, color = "#8e0000",
-                  label = list(text = "Critic Score is higher than User Score!")))) %>% 
-  ## X-Axis settings
-  hc_xAxis(title = list(text = "Release Year")) %>% 
-  ## Theme to adopt some basic settings
-  hc_add_theme(hc_theme_darkunica())
+           showFirstLabel = FALSE) %>% 
+  # plotBands = list(
+  #   list(from = -50, to = 0, color = "#272B30",
+  #        label = list(align = "center",
+  #                     verticalAlign = "middle",
+  #                     text = "",
+  #                     style = list(color = "#ffffff",
+  #                                  fontSize = "13px"))))) %>% 
+  ## Tooltip settings
+  hc_tooltip(crosshairs = TRUE,
+             valueDecimals = 2,
+             shared = TRUE) %>% 
+  hc_credits(enabled = TRUE, 
+             text = "Data courtesy of https://www.kaggle.com/kendallgillies/video-game-sales-and-ratings",
+             style = list(fontSize = "10px"))
+
 
 score_diff_chart
-
-#---------------------------------------------------------------------------#
-
-# Using function to return titles that match the input from user on custom searches (for shiny input)
-
-user_selection <- function(...) {
-  input_list <- list(...)
-  return(score_diff_function %>% 
-           filter(grepl(paste(input_list, collapse = '|'), title)))
-}
-

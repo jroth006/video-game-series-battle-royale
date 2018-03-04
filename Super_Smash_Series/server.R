@@ -1,28 +1,23 @@
-#
-# This is the server logic of a Shiny web application. You can run the 
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-# 
-#    http://shiny.rstudio.com/
-#
-
-library(shiny)
-library(dplyr)
-library(ggplot2)
-library(plotly)
-library(stringi)
-library(highcharter)
-library(reshape2)
-library(tidyr)
-library(shinythemes)
-
 ## Load in data
 shiny_sales_df <- readRDS("shiny_sales_df.rds")
 score_diff_df <- readRDS("shiny_diff_df.rds")
+merged_sales_df <- readRDS("merged_sales_df.rds")
 
 ## Reactivity logic
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
+  observeEvent(input[["score_diff_series"]],
+               {
+                 updateSelectInput(session = session,
+                                   inputId = "table_series",
+                                   selected = input[["score_diff_series"]])
+               })
+  
+  observeEvent(input[["table_series"]],
+               {
+                 updateSelectInput(session = session,
+                                   inputId = "score_diff_series",
+                                   selected = input[["table_series"]])
+               })
 #------------------------------------------------------------#
 ## Right Chart based on selection  
   output$right_res_chart <- renderHighchart({
@@ -60,7 +55,11 @@ shinyServer(function(input, output) {
       ## Tooltip settings
       hc_tooltip(enabled = FALSE) %>%
       ## Theme to adopt some basic settings
-      hc_add_theme(hc_theme_darkunica())
+      hc_add_theme(hc_theme_darkunica()) %>%      
+      ## Crediting the data source
+      hc_credits(enabled = TRUE, 
+               text = "Data courtesy of https://www.kaggle.com/kendallgillies/video-game-sales-and-ratings. Collected in Jan 2017.",
+               style = list(fontSize = "10px"))
   
   })
   
@@ -142,9 +141,9 @@ shinyServer(function(input, output) {
 #------------------------------------------------------------#  
 
 output$score_comp_chart <- renderHighchart({
-  user_selection <- function(input) {
+  user_selection <- function(chart_input) {
     return(score_diff_df %>% 
-             filter(grepl(paste(input, collapse = '|'), series)))
+             filter(grepl(paste(chart_input, collapse = '|'), series)))
   }
   
   score_diff_df <- user_selection(input$score_diff_series) 
@@ -206,8 +205,32 @@ output$score_comp_chart <- renderHighchart({
              #                     style = list(color = "#ffffff",
              #                                  fontSize = "13px"))))) %>% 
     ## Tooltip settings
-    hc_tooltip(valueDecimals = 2,
-               shared = TRUE)
+    hc_tooltip(crosshairs = TRUE,
+               valueDecimals = 2,
+               shared = TRUE) %>% 
+    ## Crediting the data source
+    hc_credits(enabled = TRUE, 
+               text = "Data courtesy of https://www.kaggle.com/kendallgillies/video-game-sales-and-ratings. Collected in Jan 2017.",
+               style = list(fontSize = "10px"))
  })
 
+#---------------------------------------------------------------------------#
+
+output$mytable = renderDataTable({
+  
+  user_selection_table <- function(table_input) {
+    return(merged_sales_df %>% 
+             filter(grepl(paste(table_input, collapse = '|'), Series)))
+  }
+  
+  user_selection_df <- user_selection_table(input$table_series) 
+  
+  filtered_df <- user_selection_df %>% 
+    filter(`Release Year` >= input$year_selection[1] & `Release Year` <= input$year_selection[2]) %>% 
+    filter(`User Score` >= input$user_score[1] & `User Score` <= input$user_score[2]) %>% 
+    filter(`Critic Score` >= input$critic_score[1] & `Critic Score` <= input$critic_score[2])
+    
+  
+  datatable(filtered_df, style = "bootstrap")
+})
 })
