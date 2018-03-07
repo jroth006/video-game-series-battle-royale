@@ -61,7 +61,7 @@ shinyUI(navbarPage(theme = shinytheme("slate"), "Super Smash Series",
       column(4),
       column(4, align = "center",
         selectizeInput("score_diff_series",
-                     "Choose series to summarize - multiples welcome!",
+                     "Select one or more more series to explore!",
                      c("Super Mario", "Zelda", "Sonic", "Mortal Kombat", "Halo",
                        "Metal Gear", "Street Fighter", "Mega Man", "Pokemon", "Kirby"),
                      multiple = TRUE,
@@ -82,7 +82,7 @@ tabPanel("Data Table",
            column(4),
            column(4, align = "center",
                   selectizeInput("table_series",
-                                 "Choose series to summarize - multiples welcome!",
+                                 "Select one or more more series to explore!",
                                  c("Super Mario", "Zelda", "Sonic", "Mortal Kombat", "Halo",
                                    "Metal Gear", "Street Fighter", "Mega Man", "Pokemon", "Kirby"),
                                  multiple = TRUE,
@@ -126,5 +126,40 @@ tabPanel("Data Table",
            ),
            column(1)
 )
-)
+),
+tabPanel("Analysis", 
+           fluidRow(
+             column(6,
+            
+             h1("What does it all mean?"),
+                    
+             tags$br(h4("1. Critic opinions have closely resembled user scores, until recently.")),
+                    
+             p("When looking at all the series combined, the score differential has remained wthin +/- 6% since 1998. The score differential has dropped over the last 3 years, hindered by the poorly-received releases of Street Fighter V and Mortal Kombat X."),
+             
+             tags$br(h4("2. Street Fighter and Sonic are declining in a single score, one with users and the other with critics.")),
+         
+             p("Critic scores for Street Fighter have remained consistent throughout the past 2 decades, but user scores have been decreasing since 2016, resulting in the largest negative score differentials for Street Fighter V (-45% in 2016) and Street Fighter X Tekken (-36% in 2012)."),
+         
+             p("Sonic has been facing harsh critic reviews since 2001, with user scores being higher than the critic scores input 12 out of last 13 years (Sonic Free Riders in 2010 was the outlier)."),
+         
+             tags$br(h4("3. Pokemon is immune to poor critic scores.")),
+
+             p("Critic scores have been lower than user scores 60% of the time, and also contain the largest score differential with Pokemon Mystery Dungeon: Explorers of Sky (+35%). Sales for Pokemon games still average 5.25 million units, globally.")
+                    ),
+             column(6,
+                    radioButtons("analysis_input", ("View observation from the left:"),
+                                 choices = list("1. Critic & User Scores" = "", 
+                                                "2. Street Fighter      " = "Street Fighter",
+                                                "2. Sonic               " = "Sonic",
+                                                "3. Pokemon             " = "Pokemon"), 
+                                                 selected = ""),
+                    highchartOutput("analysis_chart", height = "600px")))),
+tabPanel("Music", 
+         fluidRow(
+           column(4),
+           column(4, align = "center",
+                  tags$audio(src = "super mario.mp3", type = "audio/mp3", muted = TRUE, 
+                             volume = 0.10, autoplay = FALSE, loop = TRUE, controls = TRUE)),
+           column(4)))
 ))

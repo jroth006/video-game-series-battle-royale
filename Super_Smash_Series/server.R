@@ -1,7 +1,7 @@
 ## Load in data
-shiny_sales_df <- readRDS("shiny_sales_df.rds")
-score_diff_df <- readRDS("shiny_diff_df.rds")
-merged_sales_df <- readRDS("merged_sales_df.rds")
+shiny_sales_df <- readRDS("data/shiny_sales_df.RDS")
+score_diff_df <- readRDS("data/shiny_diff_df.RDS")
+merged_sales_df <- readRDS("data/merged_sales_df.RDS")
 
 ## Reactivity logic
 shinyServer(function(input, output, session) {
@@ -31,6 +31,7 @@ shinyServer(function(input, output, session) {
       ## Chart settings
       hc_chart(
         backgroundColor = "#272B30",
+        spacingLeft = 0,
         style = list(
           fontFamily = "Helvetica")) %>% 
       ## Plot settings
@@ -48,10 +49,11 @@ shinyServer(function(input, output, session) {
                max = 100) %>% 
       ## X Axis settings
       hc_xAxis(title = list(
-        enabled = FALSE),
-        labels = list(
-          style = list(
-            fontSize = "14px"))) %>% 
+                enabled = FALSE),
+                labels = list(
+                  align = "right",
+                  style = list(
+                    fontSize = "14px"))) %>% 
       ## Tooltip settings
       hc_tooltip(enabled = FALSE) %>%
       ## Theme to adopt some basic settings
@@ -93,6 +95,7 @@ shinyServer(function(input, output, session) {
       ## Chart settings
       hc_chart(
         backgroundColor = "#272B30",
+        spacingRight = 0,
         style = list(
           fontFamily = "Helvetica")) %>% 
       ## Plot settings
@@ -114,11 +117,16 @@ shinyServer(function(input, output, session) {
                title = list(
                  enabled = FALSE),
                labels = list(
-                 enabled = FALSE)) %>%
+                 enabled = FALSE,
+                 overflow = "justify")) %>%
       ## Tooltip settings
       hc_tooltip(enabled = FALSE) %>%
       ## Theme to adopt some basic settings
-      hc_add_theme(hc_theme_darkunica())
+      hc_add_theme(hc_theme_darkunica()) %>% 
+      ## Crediting the image source
+      hc_credits(enabled = TRUE, 
+                 text = "Images courtesy of https://www.ssbwiki.com/Super_Smash_Bros._(series)",
+                 style = list(fontSize = "10px"))
     
   })
   
@@ -179,10 +187,10 @@ output$score_comp_chart <- renderHighchart({
   #---------------------------------------------------------------------------#
   
   score_diff_chart <- highchart() %>% 
-    hc_add_series(name = "Critic Score", critic_score$value) %>% 
-    hc_add_series(name = "User Score", user_score$value) %>%
-    hc_add_series(type = "column", name = "Total Global Sales (Millions)", total_sales$value) %>%
-    hc_add_series(name = "Score Differential", score_differential$value) %>%
+    hc_add_series(name = "Critic Score", critic_score$value, color = "#8FBB58") %>% 
+    hc_add_series(name = "User Score", user_score$value, color = "#FDE725") %>%
+    hc_add_series(type = "column", name = "Total Global Sales (Millions)", total_sales$value, color = "#440154") %>%
+    hc_add_series(name = "Score Differential", score_differential$value, color = "#21908C") %>%
     ## Chart settings
     hc_chart(
       backgroundColor = "#272B30",
@@ -192,26 +200,33 @@ output$score_comp_chart <- renderHighchart({
     hc_add_theme(hc_theme_darkunica()) %>% 
     ## X-Axis settings
     hc_xAxis(categories = critic_score$Year_of_Release,
-             title = list(text = "")) %>% 
+             title = list(text = ""),
+             labels = list(
+               style = list(
+                 fontSize = "14px"))) %>% 
     ## Y-Axis settings
-    hc_yAxis(title = list(text = "Avg. Scores"),
+    hc_yAxis(title = list(enabled = FALSE),
              max = 100,
-             showFirstLabel = FALSE) %>% 
-             # plotBands = list(
-             #   list(from = -50, to = 0, color = "#272B30",
-             #        label = list(align = "center",
-             #                     verticalAlign = "middle",
-             #                     text = "",
-             #                     style = list(color = "#ffffff",
-             #                                  fontSize = "13px"))))) %>% 
+             showFirstLabel = FALSE,
+             labels = list(
+               style = list(
+                 fontSize = "14px")),
+             plotBands = list(
+               list(from = -50, to = 0, color = "#373C42",
+                    label = list(align = "center",
+                                 verticalAlign = "middle",
+                                 text = "Score differentials in this range represent Critic Score is higher than User Score!",
+                                 style = list(color = "#ffffff",
+                                              fontSize = "14px"))))) %>%
+    ## Legend settings
+    hc_legend(labels = list(
+                style = list(
+                  fontSize = "14px"
+                ))) %>% 
     ## Tooltip settings
     hc_tooltip(crosshairs = TRUE,
                valueDecimals = 2,
-               shared = TRUE) %>% 
-    ## Crediting the data source
-    hc_credits(enabled = TRUE, 
-               text = "Data courtesy of https://www.kaggle.com/kendallgillies/video-game-sales-and-ratings. Collected in Jan 2017.",
-               style = list(fontSize = "10px"))
+               shared = TRUE)
  })
 
 #---------------------------------------------------------------------------#
@@ -233,4 +248,88 @@ output$mytable = renderDataTable({
   
   datatable(filtered_df, style = "bootstrap")
 })
+
+#---------------------------------------------------------------------------#
+
+output$analysis_chart <- renderHighchart({
+  user_selection <- function(chart_input) {
+    return(score_diff_df %>% 
+             filter(grepl(paste(chart_input, collapse = '|'), series)))
+  }
+  
+  analysis_df <- user_selection(input$analysis_input) 
+  
+  analysis_critic_score <- analysis_df %>% 
+    filter(variable == "Avg. Critic Score") %>%
+    select(-c(series)) %>% 
+    group_by(Year_of_Release) %>% 
+    summarise("value" = mean(value)) %>% 
+    filter(Year_of_Release != "N/A")
+  
+  analysis_user_score <- analysis_df %>% 
+    filter(variable == "Avg. User Score") %>%
+    select(-c(series)) %>% 
+    group_by(Year_of_Release) %>% 
+    summarise("value" = mean(value)) %>% 
+    filter(Year_of_Release != "N/A")
+  
+  analysis_score_differential <- analysis_df %>% 
+    filter(variable == "Score Differential") %>%
+    select(-c(series)) %>% 
+    group_by(Year_of_Release) %>% 
+    summarise("value" = mean(value)) %>% 
+    filter(Year_of_Release != "N/A") 
+  
+  analysis_total_sales <- analysis_df %>% 
+    filter(variable == "Total Global Sales") %>%
+    select(-c(series)) %>% 
+    group_by(Year_of_Release) %>% 
+    summarise("value" = mean(value)) %>% 
+    filter(Year_of_Release != "N/A")
+  
+  #---------------------------------------------------------------------------#
+  
+  analysis_chart <- highchart() %>% 
+    hc_add_series(name = "Critic Score", analysis_critic_score$value, color = "#8FBB58") %>% 
+    hc_add_series(name = "User Score", analysis_user_score$value, color = "#FDE725") %>%
+    hc_add_series(type = "column", name = "Total Global Sales (Millions)", analysis_total_sales$value, color = "#440154") %>%
+    hc_add_series(name = "Score Differential", analysis_score_differential$value, color = "#21908C") %>%
+    ## Chart settings
+    hc_chart(
+      backgroundColor = "#272B30",
+      style = list(
+        fontFamily = "Helvetica")) %>% 
+    ## Theme to adopt some basic settings
+    hc_add_theme(hc_theme_darkunica()) %>% 
+    ## X-Axis settings
+    hc_xAxis(categories = analysis_critic_score$Year_of_Release,
+             title = list(text = ""),
+             labels = list(
+               style = list(
+                 fontSize = "14px"))) %>% 
+    ## Y-Axis settings
+    hc_yAxis(title = list(enabled = FALSE),
+             max = 100,
+             showFirstLabel = FALSE,
+             labels = list(
+               style = list(
+                 fontSize = "14px")),
+             plotBands = list(
+               list(from = -50, to = 0, color = "#373C42",
+                    label = list(align = "center",
+                                 verticalAlign = "middle",
+                                 text = "Score differentials in this range represent Critic Score is higher than User Score!",
+                                 style = list(color = "#ffffff",
+                                              fontSize = "14px"))))) %>%
+    ## Legend settings
+    hc_legend(labels = list(
+      style = list(
+        fontSize = "14px"
+      ))) %>% 
+    ## Tooltip settings
+    hc_tooltip(crosshairs = TRUE,
+               valueDecimals = 2,
+               shared = TRUE)
+})
+
 })

@@ -90,16 +90,26 @@ levels(merged_sales_df$Platform) <- sub("GG", "Game Gear", levels(merged_sales_d
 
 #---------------------------------------------------------------------------#
 ## Creating merged_sales_df for the Data Table
+original_merged_sales_df <- readRDS("original_merged_sales_df.rds")
+avg_by_platform <- original_merged_sales_df %>% 
+  filter(Critic_Count > 5 & User_Count > 5) %>% 
+  
+  group_by(Platform) %>%
+  summarise("Avg. Global Sales" = mean(Global_Sales, drop_na = TRUE),
+            "Avg. Critic Score" = mean(Critic_Score, drop_na = TRUE),
+            "Avg. User Score" = mean(User_Score, drop_na = TRUE))
 
-merged_sales_df <- merged_sales_df %>% 
+
+merged_sales_df <- original_merged_sales_df %>% 
   select(-c(NA_Sales, EU_Sales, JP_Sales, Other_Sales,
             Critic_Count, User_Count, Rating)) %>%
   mutate("Name" = gsub("(?<=\\b)([a-z])", "\\U\\1", Name, perl = TRUE)) %>%
-  mutate("series" = gsub("(?<=\\b)([a-z])", "\\U\\1", series, perl = TRUE))
+  mutate("series" = gsub("(?<=\\b)([a-z])", "\\U\\1", series, perl = TRUE)) %>% 
+  transform("Score Differential" = User_Score - Critic_Score)
 
 
 colnames(merged_sales_df) <- c("Title", "Platform", "Release Year", "Genre", "Publisher", "Total Global Sales (Millions)",
-           "Critic Score", "User Score", "Developer", "Series")
+           "Critic Score", "User Score", "Developer", "Series", "Score Differential")
 
 merged_sales_df$`Release Year` <- as.integer(paste(merged_sales_df$`Release Year`))
 merged_sales_df <- merged_sales_df %>% 
@@ -111,15 +121,17 @@ saveRDS(merged_sales_df, file = "merged_sales_df.rds")
 ## Finding the difference between user scores and critic scores for second tab
 
 score_diff_function <- function(diff_input){
-  merged_sales_df %>% 
-    filter(series == diff_input) %>% 
+  original_merged_sales_df %>% 
+    filter(series == diff_input,
+           !is.na(Critic_Score),
+           !is.na(User_Score)) %>% 
     select("Year_of_Release","User_Score", "User_Count", 
            "Critic_Score", "Critic_Count", "Global_Sales", "series") %>% 
     group_by(Year_of_Release, series) %>% 
-    summarise("Avg. Critic Score" = mean(Critic_Score[Critic_Score>1],na.rm=TRUE),
-              "Avg. User Score" = mean(User_Score[User_Score > 1], na.rm = TRUE),
-              "Score Differential" = mean(User_Score[User_Score > 1],na.rm=TRUE) - 
-                mean(Critic_Score[Critic_Score>1], na.rm = TRUE),
+    summarise("Avg. Critic Score" = mean(Critic_Score, na.rm=TRUE),
+              "Avg. User Score" = mean(User_Score, na.rm = TRUE),
+              "Score Differential" = mean(User_Score,na.rm=TRUE) - 
+                mean(Critic_Score),
               "Total Global Sales" = sum(Global_Sales)) %>%
     drop_na(`Score Differential`) %>%
     drop_na(`Total Global Sales`) %>% 
@@ -152,17 +164,19 @@ saveRDS(score_diff_df, "shiny_diff_df.RDS")
 
 text_input <- input$radio2
 
+original_merged_sales_df <- readRDS("original_merged_sales_df.rds")
+
 shiny_function <- function(text_input){
-  merged_sales_df %>% 
+  original_merged_sales_df %>% 
   filter(series == text_input) %>% 
   select("Name", "Platform", "Year_of_Release", "Global_Sales",
          "User_Score", "User_Count", "Critic_Score", "Critic_Count", "series") %>% 
   summarise("Series Name" = unique(series),
-            "# of Platforms" = length(unique(Platform)),
-            "# of Titles" = length(unique(Name)),
-            "Avg. Global Units Sold (in millions)" = mean(Global_Sales),
-            "Avg. Critic Score" = mean(Critic_Score[Critic_Score>1],na.rm=TRUE),
-            "Avg. User Score" = mean(User_Score[User_Score > 1], na.rm = TRUE)) %>% 
+            "Avg. Sales per Title (millions)" = mean(Global_Sales),
+            "Number of Different Platforms" = length(unique(Platform)),
+            "Number of Titles in Series" = length(unique(Name)),
+            "Avg. Critic Score - Metacritic" = mean(Critic_Score[Critic_Score>1],na.rm=TRUE),
+            "Avg. User Score - Metacritic" = mean(User_Score[User_Score > 1], na.rm = TRUE)) %>% 
   melt(id = "Series Name") %>% 
   mutate(value = round(value, 2)) 
 }
