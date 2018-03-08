@@ -19,7 +19,10 @@ shinyServer(function(input, output, session) {
                                    selected = input[["table_series"]])
                })
 #------------------------------------------------------------#
-## Right Chart based on selection  
+
+## First Tab - comparison barplot with images  
+  
+  # Right Chart based on selection  
   output$right_res_chart <- renderHighchart({
     input$goButton
     
@@ -67,14 +70,14 @@ shinyServer(function(input, output, session) {
   
 #------------------------------------------------------------#  
   
-## Right image selection based on selection
+# Right image selection based on selection
   output$right_image <- renderImage({
     input$goButton
     
     filename <- normalizePath(file.path('./www',
                                         paste(isolate(input$series_name[2]), '.png', sep = '')))
     
-    # Return a list containing the filename and alt text
+    # Return a list containing the filename and size options
     list(src = filename,
          height = 300,
          width = 200)
@@ -83,7 +86,7 @@ shinyServer(function(input, output, session) {
   
   #------------------------------------------------------------#  
   
-  ## Left Chart based on selection  
+  # Left Chart based on selection  
   output$left_res_chart <- renderHighchart({
     input$goButton
     
@@ -132,14 +135,14 @@ shinyServer(function(input, output, session) {
   
   #------------------------------------------------------------#  
   
-  ## Left image selection based on selection
+  # Left image selection based on selection
   output$left_image <- renderImage({
     input$goButton
 
     filename <- normalizePath(file.path('./www',
                                         paste(isolate(input$series_name[1]), '.png', sep = '')))
     
-    # Return a list containing the filename and alt text
+    # Return a list containing the filename and size options
     list(src = filename,
          height = 300,
          width = 200)
@@ -148,14 +151,18 @@ shinyServer(function(input, output, session) {
 
 #------------------------------------------------------------#  
 
-output$score_comp_chart <- renderHighchart({
-  user_selection <- function(chart_input) {
-    return(score_diff_df %>% 
-             filter(grepl(paste(chart_input, collapse = '|'), series)))
-  }
-  
-  score_diff_df <- user_selection(input$score_diff_series) 
-  
+## Second tab - Score comparison chart
+  output$score_comp_chart <- renderHighchart({
+    # chart_type = input$chart_type_input
+    # if(chart_type == "combined"){
+#---------------------------------------------------------------------------#
+    user_selection <- function(chart_input) {
+      return(score_diff_df %>% 
+               filter(grepl(paste(chart_input, collapse = '|'), series)))
+    }
+    
+    score_diff_df <- user_selection(input$score_diff_series) 
+    
   critic_score <- score_diff_df %>% 
     filter(variable == "Avg. Critic Score") %>%
     select(-c(series)) %>% 
@@ -227,10 +234,15 @@ output$score_comp_chart <- renderHighchart({
     hc_tooltip(crosshairs = TRUE,
                valueDecimals = 2,
                shared = TRUE)
- })
+  # } else{
+  #   print("scatter!")
+  # }
+  })
+
 
 #---------------------------------------------------------------------------#
 
+## Third tab - table data based on input  
 output$mytable = renderDataTable({
   
   user_selection_table <- function(table_input) {
@@ -251,6 +263,7 @@ output$mytable = renderDataTable({
 
 #---------------------------------------------------------------------------#
 
+## Fourth tab - Analysis text with chart presets
 output$analysis_chart <- renderHighchart({
   user_selection <- function(chart_input) {
     return(score_diff_df %>% 
@@ -331,5 +344,4 @@ output$analysis_chart <- renderHighchart({
                valueDecimals = 2,
                shared = TRUE)
 })
-
 })
