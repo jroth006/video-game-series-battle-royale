@@ -11,7 +11,7 @@ library(DT)
 
 
 
-shinyUI(navbarPage(theme = shinytheme("slate"), "Super Smash Series",
+shinyUI(navbarPage(theme = shinytheme("slate"), tags$a(href="https://github.com/jroth006/", "Super Smash Series"),
 
 #------------------------------------------------------------#  
 ## First Panel - Series Comparison
@@ -33,7 +33,7 @@ shinyUI(navbarPage(theme = shinytheme("slate"), "Super Smash Series",
                    minItems = 2,
                    maxItems = 2),
                    selected = c("Super Mario", "Zelda")),
-          actionButton("goButton", "Choose 2 series above and click here to compare!"),
+          actionButton("goButton", "Choose two series above and click here to compare!"),
           tags$br(p("")),
           tags$i(p("Quick tip - click in the box and press delete to clear selections"))
     ),
@@ -57,7 +57,7 @@ shinyUI(navbarPage(theme = shinytheme("slate"), "Super Smash Series",
 #------------------------------------------------------------#
 ## Second Panel - Score Comparison
 
-  tabPanel("Score Comparison",
+  tabPanel("Scores Over Time",
     fluidRow(
       column(4),
       column(4, align = "center",
@@ -75,7 +75,7 @@ shinyUI(navbarPage(theme = shinytheme("slate"), "Super Smash Series",
         )),
     fluidRow(
       column(12, align = "center",
-      h4("The resulting graph is an average of all selected series."),
+      h5("The resulting graph is an average of all selected series."),
       p("For a more in-depth look, switch over to the Data Table tab."),
       tags$u(p("Don't worry - Your selections will transfer over!"))
     )),
@@ -147,7 +147,7 @@ tabPanel("Analysis",
              tags$ul(       
              tags$li(p("When looking at all the series combined, the score differential has remained within +/- 6% since 1998. The score differential has dropped over the last 3 years, hindered by the poorly-received releases of Street Fighter V and Mortal Kombat X."))
              ),
-             tags$br(h4("2. Street Fighter and Sonic are declining in score - one with users and the other with critics.")),
+             tags$br(h4("2. Street Fighter and Sonic have declining scores, but with opposite groups.")),
              tags$ul(
              tags$li(p("Critic scores for Street Fighter have remained consistent throughout the past 2 decades, but user scores have been decreasing since 2016, resulting in the largest negative score differentials for Street Fighter V (-45% in 2016) and Street Fighter X Tekken (-36% in 2012).")),
          
@@ -159,10 +159,10 @@ tabPanel("Analysis",
              )),
              column(6,
                     radioButtons("analysis_input", ("Explore the observation from the left:"),
-                                 choices = list("1. Critic & User Scores - all series" = "", 
+                                 choices = list("1.  Critic & User Scores - All Series" = "", 
                                                 "2a. Street Fighter" = "Street Fighter",
                                                 "2b. Sonic" = "Sonic",
-                                                "3. Pokemon" = "Pokemon"), 
+                                                "3.  Pokemon" = "Pokemon"), 
                                                  selected = ""),
                     highchartOutput("analysis_chart", height = "600px")))),
 tabPanel("Music", 
