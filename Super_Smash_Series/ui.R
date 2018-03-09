@@ -75,9 +75,9 @@ shinyUI(navbarPage(theme = shinytheme("slate"), "Super Smash Series",
         )),
     fluidRow(
       column(12, align = "center",
-      p("The resulting graph is an average of all selected series."),
+      h4("The resulting graph is an average of all selected series."),
       p("For a more in-depth look, switch over to the Data Table tab."),
-      tags$b(p("Don't worry - Your selections will transfer over!"))
+      tags$u(p("Don't worry - Your selections will transfer over!"))
     )),
     fluidRow(
       column(12,
@@ -159,7 +159,7 @@ tabPanel("Analysis",
              )),
              column(6,
                     radioButtons("analysis_input", ("Explore the observation from the left:"),
-                                 choices = list("1. Critic & User Scores" = "", 
+                                 choices = list("1. Critic & User Scores - all series" = "", 
                                                 "2a. Street Fighter" = "Street Fighter",
                                                 "2b. Sonic" = "Sonic",
                                                 "3. Pokemon" = "Pokemon"), 
