@@ -6,13 +6,13 @@ My parents are really young, so I've grown up around video games ever since I wa
 For this project, I wanted to look at how various video game series have trended over time. How has Mario sold over the years? How have various Pokemon games been received by critics each generation, and how does that compare to the way users rate the same game?
 
 ### Data Selection
-I found a dataset that was available through ![Alt text](https://www.kaggle.com/egrinstein/20-years-of-games, "Kaggle") which provided review data from a review company named IGN. I was also able to find sales data for a smaller group of games through ![Alt text](https://www.kaggle.com/rush4ratio/video-game-sales-with-ratings, "Kaggle"), which was joined to the review data.
+I found a dataset that was available through [Kaggle](https://www.kaggle.com/egrinstein/20-years-of-games) which provided review data from a review company named IGN. I was also able to find sales data for a smaller group of games through [Kaggle](https://www.kaggle.com/rush4ratio/video-game-sales-with-ratings), which was joined to the review data.
 
 ### Data Cleaning
 The data was clean, so a lot of the data cleaning was focused around finding video game franchises that had enough data and titles to present a clear historical picture. I used the dplyr package from R to filter through the available data, then summarized the data on a yearly basis.
 
 ### Visualizations
-I used ![Alt text](http://jkunst.com/highcharter/ "highcharter") to create my visualizations and had a really great experience with the package. Highcharter is an R wrapper for the JavaScript visualization package highchart. I knew that I wanted to have a lot of control over the look and feel of the visualizations, and found that the highchart API allowed for complete control over your presentation, from tooltips to plot options.
+I used [highcharter](http://jkunst.com/highcharter) to create my visualizations and had a really great experience with the package. Highcharter is an R wrapper for the JavaScript visualization package highchart. I knew that I wanted to have a lot of control over the look and feel of the visualizations, and found that the highchart API allowed for complete control over your presentation, from tooltips to plot options.
 
 The fourth tab contains a table, which was created by using the default Shiny table (renderHighchart). I found that the default shiny table provided all of the standard features that were needed, and was presentation-ready straight from the box.
 
@@ -30,16 +30,16 @@ Another feature that was important to me from a user's perspective was making su
 
 ## Project Screenshots
 
-### First Tab:
+### First Tab: General Comparison
 ![Alt text](readmeimg/First_Tab.png "General Comparison")
 
-### Second Tab:
+### Second Tab: Statistics over Time
 ![Alt text](readmeimg/Second_Tab.png "Statistics over Time")
 
-### Third Tab:
+### Third Tab: Table View
 ![Alt text](readmeimg/Third_Tab.png "Table View")
 
-### Fourth Tab:
+### Fourth Tab: Curated Analysis
 ![Alt text](readmeimg/Fourth_Tab.png "Curated Analysis")
 
 ## Lessons Learned
