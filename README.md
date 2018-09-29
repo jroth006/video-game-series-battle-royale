@@ -30,17 +30,17 @@ Another feature that was important to me from a user's perspective was making su
 
 ## Project Screenshots
 
-### First Tab: General Comparison
-![Alt text](readmeimg/First Tab.png "First Tab")
+### First Tab:
+![Alt text](readmeimg/First_Tab.png "General Comparison")
 
-### Second Tab: Statistics over Time
-![Alt text](readmeimg/Second Tab.png "Second Tab")
+### Second Tab:
+![Alt text](readmeimg/Second_Tab.png "Statistics over Time")
 
-### Third Tab: Table View
-![Alt text](readmeimg/Third Tab.png "Third Tab")
+### Third Tab:
+![Alt text](readmeimg/Third_Tab.png "Table View")
 
-### Fourth Tab: Curated Analysis
-![Alt text](readmeimg/Fourth Tab.png "Fourth Tab")
+### Fourth Tab:
+![Alt text](readmeimg/Fourth_Tab.png "Curated Analysis")
 
 ## Lessons Learned
 * **Sketch Out Everything** - the exchange between the UI and Server side of Shiny can become really complicated. The exchanges between the user input and the server output can be referenced multiple times, especially when trying to make user selections persist between tabs, so having a diagram can really help with troubleshooting problems.
