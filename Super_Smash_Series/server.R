@@ -265,40 +265,40 @@ output$mytable = renderDataTable({
 
 ## Fourth tab - Analysis text with chart presets
 output$analysis_chart <- renderHighchart({
-  user_selection <- function(chart_input) {
-    return(score_diff_df %>% 
-             filter(grepl(paste(chart_input, collapse = '|'), series)))
-  }
-  
-  analysis_df <- user_selection(input$analysis_input) 
-  
-  analysis_critic_score <- analysis_df %>% 
-    filter(variable == "Avg. Critic Score") %>%
-    select(-c(series)) %>% 
-    group_by(Year_of_Release) %>% 
-    summarise("value" = mean(value)) %>% 
-    filter(Year_of_Release != "N/A")
-  
-  analysis_user_score <- analysis_df %>% 
-    filter(variable == "Avg. User Score") %>%
-    select(-c(series)) %>% 
-    group_by(Year_of_Release) %>% 
-    summarise("value" = mean(value)) %>% 
-    filter(Year_of_Release != "N/A")
-  
-  analysis_score_differential <- analysis_df %>% 
-    filter(variable == "Score Differential") %>%
-    select(-c(series)) %>% 
-    group_by(Year_of_Release) %>% 
-    summarise("value" = mean(value)) %>% 
-    filter(Year_of_Release != "N/A") 
-  
-  analysis_total_sales <- analysis_df %>% 
-    filter(variable == "Total Global Sales") %>%
-    select(-c(series)) %>% 
-    group_by(Year_of_Release) %>% 
-    summarise("value" = mean(value)) %>% 
-    filter(Year_of_Release != "N/A")
+user_selection <- function(chart_input) {
+  return(score_diff_df %>% 
+           filter(grepl(paste(chart_input, collapse = '|'), series)))
+}
+
+analysis_df <- user_selection(input$analysis_input) 
+
+analysis_critic_score <- analysis_df %>% 
+  filter(variable == "Avg. Critic Score") %>%
+  select(-c(series)) %>% 
+  group_by(Year_of_Release) %>% 
+  summarise("value" = mean(value)) %>% 
+  filter(Year_of_Release != "N/A")
+
+analysis_user_score <- analysis_df %>% 
+  filter(variable == "Avg. User Score") %>%
+  select(-c(series)) %>% 
+  group_by(Year_of_Release) %>% 
+  summarise("value" = mean(value)) %>% 
+  filter(Year_of_Release != "N/A")
+
+analysis_score_differential <- analysis_df %>% 
+  filter(variable == "Score Differential") %>%
+  select(-c(series)) %>% 
+  group_by(Year_of_Release) %>% 
+  summarise("value" = mean(value)) %>% 
+  filter(Year_of_Release != "N/A") 
+
+analysis_total_sales <- analysis_df %>% 
+  filter(variable == "Total Global Sales") %>%
+  select(-c(series)) %>% 
+  group_by(Year_of_Release) %>% 
+  summarise("value" = mean(value)) %>% 
+  filter(Year_of_Release != "N/A")
   
   #---------------------------------------------------------------------------#
   

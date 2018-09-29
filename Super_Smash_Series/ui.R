@@ -24,6 +24,7 @@ shinyUI(navbarPage(theme = shinytheme("slate"), tags$a(href="https://github.com/
            imageOutput("left_image", height = "300px")
            ),
        column(4, align = "center",
+          h4(p("Click in the box and press delete to clear previous selections")),
           selectizeInput("series_name",
                    "",
                    c("Super Mario", "Zelda", "Sonic", "Mortal Kombat", "Halo",
@@ -33,9 +34,7 @@ shinyUI(navbarPage(theme = shinytheme("slate"), tags$a(href="https://github.com/
                    minItems = 2,
                    maxItems = 2),
                    selected = c("Super Mario", "Zelda")),
-          actionButton("goButton", "Choose two series above and click here to compare!"),
-          tags$br(p("")),
-          tags$i(p("Quick tip - click in the box and press delete to clear selections"))
+          actionButton("goButton", "Choose two series above and click here to compare!")
     ),
         column(4, align = "center",
            imageOutput("right_image", height = "300px")
@@ -75,7 +74,7 @@ shinyUI(navbarPage(theme = shinytheme("slate"), tags$a(href="https://github.com/
         )),
     fluidRow(
       column(12, align = "center",
-      h5("The resulting graph is an average of all selected series."),
+      h4("The resulting graph is an average of all selected series."),
       p("For a more in-depth look, switch over to the Data Table tab."),
       tags$u(p("Don't worry - Your selections will transfer over!"))
     )),
@@ -145,26 +144,37 @@ tabPanel("Analysis",
                     
              tags$br(h4("1. Critic scores have closely mirrored user scores, until recently.")),
              tags$ul(       
-             tags$li(p("When looking at all the series combined, the score differential has remained within +/- 6% since 1998. The score differential has dropped over the last 3 years, hindered by the poorly-received releases of Street Fighter V and Mortal Kombat X."))
-             ),
+             tags$li(p("When looking at all the series combined, the score differential has remained 
+                       within +/- 6% since 1998. The score differential has dropped over the last 3 years, 
+                       hindered by the poorly-received releases of Street Fighter V and Mortal Kombat X."))),
+             #actionButton("analysis_input_1", "1"),
              tags$br(h4("2. Street Fighter and Sonic have declining scores, but with opposite groups.")),
              tags$ul(
-             tags$li(p("Critic scores for Street Fighter have remained consistent throughout the past 2 decades, but user scores have been decreasing since 2016, resulting in the largest negative score differentials for Street Fighter V (-45% in 2016) and Street Fighter X Tekken (-36% in 2012).")),
-         
-             tags$li(p("Sonic has been facing harsh critic reviews since 2001, with user scores being higher than the critic scores input 12 out of last 13 years (Sonic Free Riders in 2010 was the outlier)."))
-             ),
+             tags$li(p("A) Critic scores for Street Fighter have remained consistent throughout the past 2 decades,
+                       but user scores have been decreasing since 2016, resulting in the largest negative score 
+                       differentials for Street Fighter V (-45% in 2016) 
+                       and Street Fighter X Tekken (-36% in 2012)."))),
+             #actionButton("analysis_input_2", "2"),
+             tags$ul(
+             tags$li(p("B) Sonic has been facing harsh critic reviews since 2001, 
+                       with user scores being higher than the critic scores input 12 out of last 13 years 
+                       (Sonic Free Riders in 2010 was the outlier)."))),
+             #actionButton("analysis_input_3", "3"),
              tags$br(h4("3. Users support Pokemon despite consistently poor critic scores.")),
              tags$ul(
-             tags$li(p("Critic scores have been lower than user scores 60% of the time, and also contain the largest score differential with Pokemon Mystery Dungeon: Explorers of Sky (+35%). Sales for Pokemon games still average 5.25 million units, globally."))
-             )),
+             tags$li(p("Critic scores have been lower than user scores 60% of the time, 
+                       and also contain the largest score differential with Pokemon Mystery 
+                       Dungeon: Explorers of Sky (+35%). Sales for Pokemon games still average 5.25 million units, 
+                       globally.")))),
+             #actionButton("analysis_input_4", "4"),
              column(6,
                     radioButtons("analysis_input", ("Explore the observation from the left:"),
-                                 choices = list("1.  Critic & User Scores - All Series" = "", 
+                                 choices = list("1.  Critic & User Scores - All Series" = "",
                                                 "2a. Street Fighter" = "Street Fighter",
                                                 "2b. Sonic" = "Sonic",
-                                                "3.  Pokemon" = "Pokemon"), 
+                                                "3.  Pokemon" = "Pokemon"),
                                                  selected = ""),
-                    highchartOutput("analysis_chart", height = "600px")))),
+                     highchartOutput("analysis_chart", height = "600px")))),
 tabPanel("Music", 
          fluidRow(
            column(4),
